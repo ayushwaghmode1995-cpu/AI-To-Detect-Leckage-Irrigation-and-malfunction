@@ -1,109 +1,153 @@
-AI-Based Smart Irrigation Leakage & Malfunction Detection System
-📌 Project Overview
-This project implements an intelligent irrigation monitoring system that detects water leakage and flow malfunction in an irrigation pipeline using multiple flow sensors and an automatic control valve (relay-controlled solenoid).
-The system continuously compares real-time water flow at three different pipeline locations:
-Upstream
-Middle
-Downstream
-By analyzing the difference in flow rates, the system intelligently detects leakage or abnormal flow and automatically stops water supply to prevent water wastage.
-🎯 Objectives
-Detect leakage in irrigation pipelines
-Identify faulty or abnormal flow conditions
-Automatically stop water flow when leakage is detected
-Reduce water wastage and improve irrigation efficiency
-Enable real-time monitoring via Serial Monitor
-🧠 Why This Is an AI-Based System?
-Although this project does not use Machine Learning, it qualifies as AI-based (Rule-Based Intelligence) because:
-It analyzes sensor data in real time
-Applies logical decision-making rules
-Detects anomalies based on threshold comparisons
-Takes autonomous actions without human intervention
-This falls under Artificial Intelligence – Expert / Rule-Based Systems.
-🛠️ Hardware Components
-ESP32 / Arduino-compatible microcontroller
-3 × Water Flow Sensors (Hall Effect type)
-Relay Module (Active LOW)
-Solenoid Valve
-Power Supply
-Pipes & connectors
-💻 Software & Technologies
-Arduino IDE
-Embedded C/C++
-Interrupt-based sensor reading
-Serial communication
-Threshold-based decision logic
-🔌 Pin Configuration
-Component
-Pin
-Flow Sensor 1 (Upstream)
-GPIO 13
-Flow Sensor 2 (Middle)
-GPIO 12
-Flow Sensor 3 (Downstream)
-GPIO 14
-Relay Module
-GPIO 35
-⚙️ Working Principle
-1️⃣ Flow Measurement
-Each flow sensor generates pulses proportional to water flow.
-Interrupts count pulses accurately in real time.
-Flow rate is calculated every 1 second using:
-Copy code
+Smart Water Leakage Detection & Control System (ESP32)
+📌 Overview
 
-Flow Rate (L/min) = Pulse Count / 7.5
-2️⃣ Intelligent Leakage Detection
-The system compares flow rates between all three sensors.
-If the difference exceeds a predefined threshold, leakage is detected.
-The system identifies the exact location of leakage:
-Upstream
-Middle
-Downstream
-3️⃣ Automatic Water Control
-If leakage is detected:
-Relay is activated
-Solenoid valve closes
-Water flow is stopped immediately
-If no leakage:
-Water flow continues normally
-🧮 Leakage Detection Logic
-Copy code
-Text
-If |Flow1 - Flow2| > Threshold AND |Flow1 - Flow3| > Threshold → Upstream Leakage
-If |Flow2 - Flow1| > Threshold AND |Flow2 - Flow3| > Threshold → Middle Leakage
-If |Flow3 - Flow1| > Threshold AND |Flow3 - Flow2| > Threshold → Downstream Leakage
-Threshold used:
-Copy code
+This project implements a smart water leakage detection system using three flow sensors and an electromagnetic solenoid valve controlled by a relay.
+An ESP32 continuously monitors water flow at three different pipeline positions and automatically shuts off water supply when leakage is detected.
 
-0.5 L/min
-📟 Serial Monitor Output
-Displays real-time flow rate of each sensor
-Shows leakage detection messages
-Indicates relay and water flow status
-Example:
-Copy code
+🧠 System Concept
 
-Flow Rate 1: 2.3 L/min
-Flow Rate 2: 1.1 L/min
-Flow Rate 3: 1.0 L/min
-Leakage Detected: Upstream
+The system uses comparative flow analysis:
+
+Sensor 1 (Upstream) – Main inlet flow
+
+Sensor 2 (Middle) – Intermediate section
+
+Sensor 3 (Downstream) – End section
+
+If the flow rate at one sensor differs significantly from the others, the system assumes leakage at that section and closes the solenoid valve.
+
+🔧 Hardware Requirements
+
+ESP32 Development Board
+
+3 × Water Flow Sensors (Hall-effect type)
+
+1 × Relay Module (Active LOW)
+
+1 × Solenoid Valve
+
+External power supply for valve (if required)
+
+Jumper wires & piping setup
+
+📍 Pin Configuration
+Component	ESP32 Pin	Description
+Flow Sensor 1	GPIO 13	Upstream sensor
+Flow Sensor 2	GPIO 12	Middle sensor
+Flow Sensor 3	GPIO 14	Downstream sensor
+Relay Module	GPIO 35	Controls solenoid valve
+⚙️ How the Code Works
+1️⃣ Pulse Counting (Interrupt-Based)
+
+Each flow sensor outputs pulses proportional to water flow.
+
+void IRAM_ATTR pulseCounter1() { pulseCount1++; }
+
+
+Interrupts ensure accurate pulse counting
+
+volatile variables prevent data inconsistency
+
+ISR functions are stored in IRAM for ESP32 stability
+
+2️⃣ Flow Rate Calculation
+
+Flow rate is calculated every 1 second:
+
+flowRate = pulseCount / 7.5;
+
+
+Assumption: 7.5 pulses = 1 liter/minute
+(Adjust according to your flow sensor’s datasheet)
+
+Pulse counters are reset after each measurement cycle.
+
+3️⃣ Leakage Detection Logic
+
+A threshold-based comparison is used:
+
+const float leakageThreshold = 0.5; // L/min
+
+
+Leakage is detected if:
+
+One sensor differs from the other two sensors by more than the threshold
+
+Examples:
+
+Leak near upstream → Sensor 1 differs
+
+Leak in middle → Sensor 2 differs
+
+Leak downstream → Sensor 3 differs
+
+4️⃣ Relay & Solenoid Control
+
+The relay is active LOW:
+
+Condition	Relay State	Valve
+Normal flow	HIGH	Open
+Leakage detected	LOW	Closed
+digitalWrite(RELAY_PIN, LOW);  // Stop water flow
+
+🚨 System Behavior Summary
+Scenario	Action
+Normal flow	Water supply ON
+Leakage detected	Water supply OFF
+Leakage cleared	Water supply resumes
+📊 Serial Monitor Output
+
+Example output:
+
+Flow Rate 1: 4.2 L/min
+Flow Rate 2: 4.1 L/min
+Flow Rate 3: 2.9 L/min
+Leakage Detected: Downstream (Sensor 3)
 Water flow stopped due to leakage!
-🚨 Features
-✔ Real-time monitoring
-✔ Automatic leakage detection
-✔ Precise leakage location identification
-✔ Automatic water cutoff
-✔ Low-cost & scalable solution
-✔ Suitable for farms & smart irrigation systems
-🔮 Future Enhancements
-Integrate Machine Learning for adaptive thresholds
-Cloud-based monitoring using IoT (MQTT / Firebase)
-Mobile app alerts
-Data logging & analytics
-Solar-powered deployment
-🎓 Academic Relevance
-Final Year Engineering Project
-Domains:
-Artificial Intelligence (Rule-Based Systems)
-Embedded Systems
-Smart Agriculture
-IoT & Automation
+--------------------
+
+⚠️ Assumptions & Limitations
+
+Sensors are properly calibrated
+
+Pipeline pressure is stable
+
+Pulses are evenly distributed
+
+Very small leaks may require threshold tuning
+
+No filtering for turbulence (can be improved)
+
+🔮 Possible Improvements
+
+Moving average filtering
+
+Data logging (SD card / cloud)
+
+GSM or WiFi alerts
+
+OLED display
+
+Auto-retry valve reopening
+
+Machine learning–based detection
+
+🧪 Tested On
+
+ESP32 Dev Module
+
+Generic Hall-effect water flow sensors
+
+5V relay module (active LOW)
+
+📝 Author Notes
+
+This system is suitable for:
+
+Smart homes
+
+Industrial pipelines
+
+Water conservation systems
+
+Automated safety shutoff applications
